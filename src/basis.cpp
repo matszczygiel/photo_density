@@ -98,6 +98,7 @@ int GTOPW_contraction::functions_number_sph() const { return shell_sph_siz.at(sh
 int GTOPW_contraction::functions_number_crt() const { return shell_crt_siz.at(shell_to_int(shl)); }
 
 cdouble GTOPW_contraction::operator()(int m, const double &r, const double &theta, const double &phi) const {
+    using namespace std::complex_literals;
     const auto l = shell_to_int(shl);
     cdouble res  = 0;
     for (const auto &orb : gtopws) {

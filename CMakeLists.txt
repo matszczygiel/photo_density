@@ -25,9 +25,10 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:DENSITY_DEB
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src )
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -march=native)
 
-find_package(OpenMP REQUIRED)
+find_library(TBB NAMES libtbb.so)
+
  
-target_link_libraries (${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX )
+target_link_libraries (${PROJECT_NAME} PRIVATE ${TBB})
  

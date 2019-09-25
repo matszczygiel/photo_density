@@ -1,7 +1,8 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <numeric>
-#include <algorithm>
+#include <execution>
 
 #include "basis.h"
 #include "utils.h"
@@ -49,33 +50,64 @@ int main(int argc, char* argv[]) {
 
     ifstream basis_file_stream(basis_file);
     basis.read(basis_file_stream);
+    basis_file_stream.close();
 
-    for (int frame = 0; frame < nframes; ++frame) {
+    vector<pair<string, string>> paths(nframes);
+    generate(begin(paths), end(paths), [frame = 0, in_path, out_path]() mutable {
         const string in_file  = in_path + "/dump-" + std::to_string(frame * framestep) + ".dat";
         const string out_file = out_path + "/density-" + std::to_string(frame * framestep) + ".dat";
-        cout << "Reading file: " << in_file << std::endl;
+        ++frame;
+        return make_pair(in_file, out_file);
+    });
 
-        vector<cdouble> state;
-        state.resize(basis.functions_number_sph());
-        ifstream in(in_file);
+    for_each(execution::par_unseq, begin(paths), end(paths), [&](const auto& p) {
+        cout << "Reading file: " << p.first << std::endl;
+
+        vector<cdouble> state(basis.functions_number_sph());
+
+        ifstream in(p.first);
         in.ignore(numeric_limits<streamsize>::max(), '\n');
         for (auto& x : state)
             in >> x;
         in.close();
 
-        ofstream out(out_file);
+        ofstream out(p.second);
         out << scientific << setprecision(5);
         for (const auto& r : rr) {
             for (const auto& t : tt) {
                 const auto basis_vals = basis(r, t, phi);
-                const auto val =
-                    inner_product(state.begin(), state.end(), basis_vals.begin(), cdouble(0, 0));
+                const auto val        = inner_product(state.begin(), state.end(), basis_vals.begin(), cdouble(0, 0));
                 out << norm(val) << "  ";
             }
             out << '\n';
         }
-    }
+    });
 
+    /*   vector<cdouble> state(basis.functions_number_sph());
+
+       for (int frame = 0; frame < nframes; ++frame) {
+           const string in_file  = in_path + "/dump-" + std::to_string(frame * framestep) + ".dat";
+           const string out_file = out_path + "/density-" + std::to_string(frame * framestep) + ".dat";
+           cout << "Reading file: " << in_file << std::endl;
+
+           ifstream in(in_file);
+           in.ignore(numeric_limits<streamsize>::max(), '\n');
+           for (auto& x : state)
+               in >> x;
+           in.close();
+
+           ofstream out(out_file);
+           out << scientific << setprecision(5);
+           for (const auto& r : rr) {
+               for (const auto& t : tt) {
+                   const auto basis_vals = basis(r, t, phi);
+                   const auto val        = inner_product(state.begin(), state.end(), basis_vals.begin(), cdouble(0, 0));
+                   out << norm(val) << "  ";
+               }
+               out << '\n';
+           }
+       }
+   */
     cout << " Wall time: " << setprecision(5) << fixed << clk << "\n\n";
     return EXIT_SUCCESS;
 }
