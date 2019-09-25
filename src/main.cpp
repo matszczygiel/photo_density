@@ -83,31 +83,6 @@ int main(int argc, char* argv[]) {
         }
     });
 
-    /*   vector<cdouble> state(basis.functions_number_sph());
-
-       for (int frame = 0; frame < nframes; ++frame) {
-           const string in_file  = in_path + "/dump-" + std::to_string(frame * framestep) + ".dat";
-           const string out_file = out_path + "/density-" + std::to_string(frame * framestep) + ".dat";
-           cout << "Reading file: " << in_file << std::endl;
-
-           ifstream in(in_file);
-           in.ignore(numeric_limits<streamsize>::max(), '\n');
-           for (auto& x : state)
-               in >> x;
-           in.close();
-
-           ofstream out(out_file);
-           out << scientific << setprecision(5);
-           for (const auto& r : rr) {
-               for (const auto& t : tt) {
-                   const auto basis_vals = basis(r, t, phi);
-                   const auto val        = inner_product(state.begin(), state.end(), basis_vals.begin(), cdouble(0, 0));
-                   out << norm(val) << "  ";
-               }
-               out << '\n';
-           }
-       }
-   */
     cout << " Wall time: " << setprecision(5) << fixed << clk << "\n\n";
     return EXIT_SUCCESS;
 }
