@@ -1,9 +1,9 @@
 #include "basis.h"
 
 #include <cmath>
+#include <complex>
 #include <map>
 #include <sstream>
-#include <complex>
 
 #include <boost/math/special_functions/factorials.hpp>
 #include <boost/math/special_functions/spherical_harmonic.hpp>
@@ -103,13 +103,26 @@ cdouble GTOPW_contraction::operator()(int m, const double &r, const double &thet
     cdouble res  = 0;
     for (const auto &orb : gtopws) {
         const cdouble ikr = 1i * (orb.k[0] * r * std::sin(theta) * std::cos(phi) +
-                            orb.k[1] * r * std::sin(theta) * std::sin(phi) + orb.k[2] * r * std::cos(theta));
+                                  orb.k[1] * r * std::sin(theta) * std::sin(phi) + orb.k[2] * r * std::cos(theta));
         res += orb.coef * std::exp(-orb.exp * r * r + ikr) * std::pow(2.0 * orb.exp, 0.75 + l / 2.0);
     }
     res *=
         std::exp2(1.0 + l / 2.0) / std::pow(M_PI, 0.25) / std::sqrt(boost::math::double_factorial<double>(2 * l + 1));
+    res *= std::pow(r, l);
 
-    return res * boost::math::spherical_harmonic(l, m, theta, phi) * std::pow(r, l);
+    //Construct real spherical harmonics
+    if (m < 0) {
+        res *= M_SQRT2 * boost::math::spherical_harmonic_i(l, -m, theta, phi);
+    } else if (m == 0) {
+        res *= boost::math::spherical_harmonic_r(l, 0, theta, phi);
+    } else {
+        res *= M_SQRT2 * boost::math::spherical_harmonic_r(l, m, theta, phi);
+    }
+
+    if (m % 2 == 1)
+        res *= -1.0;
+
+    return res;
 }
 
 std::ostream &operator<<(std::ostream &os, const GTOPW_contraction &rhs) {
