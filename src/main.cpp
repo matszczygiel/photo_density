@@ -1,8 +1,9 @@
 #include <algorithm>
+#include <execution>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <numeric>
-#include <execution>
 
 #include "basis.h"
 #include "utils.h"
@@ -18,7 +19,7 @@ int main(int argc, char* argv[]) {
 
     constexpr int nr      = 100;
     constexpr int ntheta  = 50;
-    constexpr double rmax = 40.0;
+    constexpr double rmax = 100.0;
 
     constexpr int nframes   = 801;
     constexpr int framestep = 100;
@@ -60,8 +61,13 @@ int main(int argc, char* argv[]) {
         return make_pair(in_file, out_file);
     });
 
+    mutex mtx;
+
     for_each(execution::par_unseq, begin(paths), end(paths), [&](const auto& p) {
-        cout << "Reading file: " << p.first << std::endl;
+        {
+            lock_guard lock(mtx);
+            cout << "Reading file: " << p.first << std::endl;
+        }
 
         vector<cdouble> state(basis.functions_number_sph());
 
